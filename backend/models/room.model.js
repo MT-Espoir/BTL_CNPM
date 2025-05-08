@@ -5,16 +5,16 @@ class Room {
         this.id = id;
         this.name = name;
         this.location = location;
-        this.floor = this.floor;
-        this.building = this.building;
-        this.capacity = this.capacity;
-        this.area = this.area;
-        this.roomType = this.roomType;
-        this.roomImage = this.roomImage;
-        this.description = this.description;
-        this.facilities = this.facilities;
-        this.openingHours = this.openingHours;
-        this.status = this.status || 'AVAILABLE';
+        this.floor = floor;
+        this.building = building;
+        this.capacity = capacity;
+        this.area = area;
+        this.roomType = roomType;
+        this.roomImage = roomImage;
+        this.description = description;
+        this.facilities = facilities;
+        this.openingHours = openingHours;
+        this.status = status || 'AVAILABLE';
     }
 
     /**
