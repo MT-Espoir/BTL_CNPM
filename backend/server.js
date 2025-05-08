@@ -23,6 +23,9 @@ try {
 require('dotenv').config();
 const port = process.env.PORT;
 
+// Use a specific allowed origin for CORS when credentials are included
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100
@@ -35,7 +38,7 @@ app.use(limiter);
 
 // Cấu hình CORS chính xác để hỗ trợ preflight requests
 app.use(cors({
-  origin: '*', // Cho phép tất cả origins hoặc bạn có thể chỉ định cụ thể ['http://localhost:3000']
+  origin: FRONTEND_URL, // wildcard breaks credentialed requests
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Cho phép các phương thức HTTP
   allowedHeaders: ['Content-Type', 'Authorization'], // Cho phép các headers
   credentials: true, // Cho phép credentials
@@ -44,7 +47,7 @@ app.use(cors({
 
 // Thiết lập headers CORS thủ công để đảm bảo tương thích
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*'); // Hoặc origin cụ thể
+  res.header('Access-Control-Allow-Origin', FRONTEND_URL);
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
