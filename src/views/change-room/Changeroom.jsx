@@ -35,24 +35,76 @@ const ChangeRoomPage = () => {
   const capacityOptions = [2, 5, 7];
   const durationOptions = ['1 tiếng', '2 tiếng', '3 tiếng', '4 tiếng'];
 
-  // Format thời gian theo định dạng UTC+0 (không thêm offset múi giờ địa phương)
+  // Format thời gian theo định dạng nhất quán với RoomSearchPage
   const formatTime = (isoTimeString) => {
     try {
-      const date = new Date(isoTimeString);
+      if (!isoTimeString) return 'N/A';
+      
+      // Loại bỏ ký hiệu múi giờ nếu có (Z hoặc +xx:xx)
+      const localTimeString = isoTimeString.replace(/Z|[+-]\d{2}:\d{2}$/, '');
+      
+      const date = new Date(localTimeString);
+      if (isNaN(date.getTime())) return isoTimeString;
+      
       const day = date.getDate();
       const month = date.getMonth() + 1;
       const year = date.getFullYear();
       const hours = date.getHours().toString().padStart(2, '0');
       const minutes = date.getMinutes().toString().padStart(2, '0');
-
+  
       const weekdayIndex = date.getDay();
       const weekdays = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
       const weekday = weekdays[weekdayIndex];
-
-      return `${weekday}, ${day} Tháng ${month} ${year} - ${hours}:${minutes}`;
+  
+      return `${weekday}, ${day}/${month}/${year} ${hours}:${minutes}`;
     } catch (err) {
       console.error('Error formatting date:', err);
       return isoTimeString || 'N/A';
+    }
+  };
+  // Format khoảng thời gian giống với RoomSearchPage
+  const formatTimeRange = (startTimeStr, endTimeStr) => {
+    if (!startTimeStr || !endTimeStr) return 'Không có thông tin';
+    
+    try {
+      const startTime = new Date(startTimeStr);
+      const endTime = new Date(endTimeStr);
+      
+      if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+        return 'Thời gian không hợp lệ';
+      }
+      
+      const startHours = startTime.getHours().toString().padStart(2, '0');
+      const startMinutes = startTime.getMinutes().toString().padStart(2, '0');
+      const endHours = endTime.getHours().toString().padStart(2, '0');
+      const endMinutes = endTime.getMinutes().toString().padStart(2, '0');
+      
+      return `${startHours}:${startMinutes} - ${endHours}:${endMinutes}`;
+    } catch (err) {
+      console.error('Error formatting time range:', err);
+      return 'Thời gian không hợp lệ';
+    }
+  };
+
+  // Trích xuất khoảng giờ từ startTime và endTime để hiển thị giống với RoomSearchPage
+  const extractTimeRangeForFilter = (startTimeStr, endTimeStr) => {
+    if (!startTimeStr || !endTimeStr) return null;
+    
+    try {
+      const startTime = new Date(startTimeStr);
+      const endTime = new Date(endTimeStr);
+      
+      if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+        return null;
+      }
+      
+      const startHour = startTime.getHours();
+      const endHour = endTime.getHours();
+      
+      return `${startHour}h - ${endHour}h`;
+    } catch (err) {
+      console.error('Error extracting time range:', err);
+      return null;
     }
   };
 
@@ -78,10 +130,25 @@ const ChangeRoomPage = () => {
             return;
           }
           
+          // Trích xuất khoảng giờ đặt phòng hiện tại để áp dụng filter
+          const timeRange = extractTimeRangeForFilter(
+            bookingResponse.data.startTime, 
+            bookingResponse.data.endTime
+          );
+          
+          // Tự động đặt timeRange từ booking hiện tại
+          if (timeRange) {
+            setFilters(prev => ({
+              ...prev,
+              timeRange: [timeRange]
+            }));
+          }
+          
           // Lấy danh sách phòng khả dụng cùng thời gian
           const roomsResponse = await getRooms({
             startTime: bookingResponse.data.startTime,
-            endTime: bookingResponse.data.endTime
+            endTime: bookingResponse.data.endTime,
+            date: new Date(bookingResponse.data.startTime).toISOString().split('T')[0]
           });
           
           if (roomsResponse.success) {
@@ -430,6 +497,14 @@ const ChangeRoomPage = () => {
                                 ? room.facilities.join(', ') 
                                 : 'Không có thông tin'}
                           </p>
+                          
+                          {filters.timeRange.length > 0 && (
+                            <div className="changeroom-time-info">
+                              <p className={`room-availability ${room.isAvailableForTimeRange !== false ? 'available' : 'unavailable'}`}>
+                                {room.isAvailableForTimeRange !== false ? 'Khả dụng' : 'Không khả dụng'} trong khoảng giờ {filters.timeRange[0]}
+                              </p>
+                            </div>
+                          )}
                         </div>
                         
                         <button 

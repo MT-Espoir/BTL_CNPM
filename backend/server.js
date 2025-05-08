@@ -33,9 +33,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(limiter);
 app.use(cors({
-  origin: (origin, callback) => {
-    callback(null, true);
-  },
+  origin: 'http://localhost:3000',
   credentials: true
 }));
 

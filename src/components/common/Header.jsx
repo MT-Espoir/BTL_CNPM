@@ -86,9 +86,12 @@ const Header = () => {
                 
                 {showUserMenu && (
                   <div className="user-dropdown-menu">
-                    <div className="user-dropdown-item" onClick={navigateToManager}>
-                      Manager
-                    </div>
+                    {/* Only show Manager option to non-student roles */}
+                    {user?.role?.toLowerCase() !== 'student' && (
+                      <div className="user-dropdown-item" onClick={navigateToManager}>
+                        Manager
+                      </div>
+                    )}
                     <div className="user-dropdown-item" onClick={handleLogout}>
                       Logout
                     </div>
